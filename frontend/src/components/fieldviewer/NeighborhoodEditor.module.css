@@ -1,0 +1,11 @@
+.wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.layer { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.layerLabel { font-size: 10px; color: var(--color-text-muted); font-family: 'SF Mono', monospace; }
+.grid { display: grid; gap: 2px; }
+.cell {
+  width: 12px; height: 12px; border: 1px solid var(--color-border);
+  border-radius: 2px; background: white; padding: 0;
+}
+.cell:hover:not(:disabled) { border-color: var(--color-primary); }
+.on { background: var(--color-primary); border-color: var(--color-primary); }
+.center { background: #1e293b; border-color: #1e293b; cursor: default; }

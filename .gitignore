@@ -1,0 +1,16 @@
+# DB・ビルド成果物
+*.db
+.DS_Store
+__pycache__/
+.venv/
+node_modules/
+dist/
+dist-electron/
+release/
+
+# 旧コピー・アーカイブ
+/surrogate-manager/
+/surrogate-manager.zip
+
+# デモデータ（python -m services.sample_field で再生成できる）
+/data/samples/field_demo.csv
