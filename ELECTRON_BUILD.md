@@ -13,7 +13,7 @@
 |---|---|---|
 | Python | 3.11 | `python --version` |
 | uv | 最新 | `uv --version` |
-| Node.js | 18以上 | `node --version` |
+| Node.js | 22.12以上 | `node --version` |
 | npm | 9以上 | `npm --version` |
 
 ---
@@ -238,11 +238,11 @@ Surrogate Manager Setup.exe
 
 ## 参考：開発モードでの起動（変わらず使える）
 
-Electronビルドとは別に、開発時はこれまで通り起動できます。
+Electronビルドとは別に、開発時はこれまで通り起動できます（`start.bat` でも可。詳細は [docs/WINDOWS.md](docs/WINDOWS.md)）。
 
 ```powershell
 # ターミナル①
-cd backend && uv run uvicorn api.main:app --reload --port 8000 (PYTHONPATH=.)
+cd backend; uv run uvicorn api.main:app --app-dir . --host 127.0.0.1 --port 8000 --reload
 
 # ターミナル②
 cd frontend && npm run dev

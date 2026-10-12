@@ -4,13 +4,28 @@
 
 ---
 
+## かんたん起動
+
+| OS | 起動方法 | 詳細 |
+|---|---|---|
+| **Windows** | `start.bat` をダブルクリック（初回はライブラリを自動導入）→ ブラウザで http://localhost:5173 が開く | **[docs/WINDOWS.md](docs/WINDOWS.md)**（準備・社内プロキシ・トラブル対処） |
+| Windows（アプリの窓で） | `start-electron.bat` をダブルクリック | 同上 |
+| Mac / Linux | `./start.sh`（Ctrl+C で停止） | 下の「起動手順（開発時）」 |
+
+終了は「backend」「frontend」の黒い画面を閉じる（Mac は Ctrl+C）。
+
+---
+
 ## 構成
 
 ```
 surrogate-manager/
-├── backend/          # Python 3.11 + FastAPI + SQLite
-├── frontend/         # Electron + React + TypeScript (Vite)
-├── data/             # サンプルデータ（DVC管理）
+├── backend/          # Python 3.11 + FastAPI + SQLite（+ numpy）
+├── frontend/         # Electron + React + TypeScript (Vite) + three.js
+├── data/             # サンプルデータ（DVC管理）。予測結果 CSV はここに置くと画面から選べる
+├── docs/WINDOWS.md   # Windows での起動手順
+├── scripts/          # start.bat から呼ぶ補助スクリプト
+├── start.bat / start-electron.bat / start.sh
 ├── CLAUDE.md         # プロジェクト設計メモ
 └── README.md         # このファイル
 ```
@@ -21,14 +36,15 @@ surrogate-manager/
 
 | ツール | バージョン | 用途 |
 |---|---|---|
-| Python | 3.11 | バックエンド |
-| uv | 最新 | Python パッケージ管理 |
-| Node.js | 18以上 | フロントエンド |
-| npm | 9以上 | パッケージ管理 |
+| uv | 最新 | Python パッケージ管理（Python 3.11 も uv が自動取得） |
+| Node.js | **22.12 以上** | フロントエンド（Vite 8 / Electron の要件。18・20 は不可） |
+| npm | Node.js に同梱 | パッケージ管理 |
 
 ---
 
-## 起動手順（開発時）
+## 起動手順（開発時・手動）
+
+以下のコマンドは Windows（PowerShell）/ Mac どちらでも同じです。
 
 ### 1. バックエンド
 
@@ -38,12 +54,12 @@ cd backend
 # 初回のみ：依存パッケージインストール
 uv sync
 
-# サーバー起動
-PYTHONPATH=. uv run uvicorn api.main:app --reload --port 8000
+# サーバー起動（--app-dir . で PYTHONPATH 設定が不要）
+uv run uvicorn api.main:app --app-dir . --host 127.0.0.1 --port 8000 --reload
 ```
 
-起動確認：http://localhost:8000/health → `{"status":"ok"}`
-API仕様：http://localhost:8000/docs
+起動確認：http://127.0.0.1:8000/health → `{"status":"ok"}`
+API仕様：http://127.0.0.1:8000/docs
 
 ### 2. フロントエンド（ブラウザで確認）
 
@@ -58,7 +74,7 @@ npm run dev
 ```
 
 ブラウザで http://localhost:5173 を開く。
-バックエンドへの `/api` リクエストは自動でプロキシされる。
+バックエンドへの `/api` リクエストは自動で `127.0.0.1:8000` へプロキシされる。
 
 ### 3. Electron アプリとして起動
 
@@ -181,10 +197,10 @@ npm run build:win
 ### CLI（画面なしで使う）
 ```bash
 cd backend
-PYTHONPATH=. uv run python -m services.closed_loop ../data/samples/field_demo.csv \
+uv run python -m services.closed_loop ../data/samples/field_demo.csv \
   -o out.csv --summary loops.json --connectivity 6 --radius 1 --min-dt 0.5
 # 任意の近傍: --offsets "[[1,0,0],[0,1,0],[0,0,1],[0,0,2]]"
-# デモデータ生成: PYTHONPATH=. uv run python -m services.sample_field ../data/samples/field_demo.csv
+# デモデータ生成: uv run python -m services.sample_field ../data/samples/field_demo.csv
 ```
 
 目安: 100万ボクセル・6近傍で約7秒（開発用 Mac）。読み込んだ点群はサーバのメモリに保持（最大8件、再起動で消える）。

@@ -73,6 +73,16 @@ def _get(fid: str) -> dict:
     return _store[fid]
 
 
+def _decode(raw: bytes) -> str:
+    """UTF-8（BOM 付き含む）を優先し、だめなら Windows の Excel 既定の cp932 で読む。"""
+    for enc in ("utf-8-sig", "cp932"):
+        try:
+            return raw.decode(enc)
+        except UnicodeDecodeError:
+            continue
+    raise HTTPException(400, "CSV の文字コードを判別できません（UTF-8 か Shift_JIS で保存してください）")
+
+
 @router.get("/")
 def list_fields():
     return [_info(fid) for fid in _store]
@@ -82,8 +92,8 @@ def list_fields():
 async def upload(file: UploadFile = File(...), pitch: float | None = Form(None)):
     raw = await file.read()
     try:
-        data, cols = cl.read_csv_text(raw.decode("utf-8-sig"))
-    except (ValueError, UnicodeDecodeError) as e:
+        data, cols = cl.read_csv_text(_decode(raw))
+    except ValueError as e:
         raise HTTPException(400, f"CSV を読めません: {e}")
     return _register(file.filename or "upload.csv", data, cols, pitch)
 
@@ -110,7 +120,7 @@ def load_path(body: LoadPath):
     if DATA_DIR not in p.parents or not p.is_file():
         raise HTTPException(400, "data/ 配下の CSV を指定してください")
     try:
-        data, cols = cl.read_csv_text(p.read_text(encoding="utf-8-sig"))
+        data, cols = cl.read_csv_text(_decode(p.read_bytes()))
     except ValueError as e:
         raise HTTPException(400, f"CSV を読めません: {e}")
     return _register(body.path, data, cols, body.pitch)

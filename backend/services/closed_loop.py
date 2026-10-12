@@ -91,13 +91,11 @@ class VoxelField:
     columns: list[str] = field(default_factory=list)
 
 
-def _detect_pitch(coord: np.ndarray) -> float:
+def _detect_pitch(coord: np.ndarray) -> float | None:
     u = np.unique(np.round(coord, 6))
-    if len(u) < 2:
-        return 1.0
     diffs = np.diff(u)
     diffs = diffs[diffs > 1e-9]
-    return float(diffs.min()) if len(diffs) else 1.0
+    return float(diffs.min()) if len(diffs) else None
 
 
 def read_csv_text(text: str) -> tuple[np.ndarray, list[str]]:
@@ -137,7 +135,11 @@ def build_field(data: np.ndarray, pitch: float | None = None, value_col: int = 3
     if pitch and pitch > 0:
         p = np.array([pitch] * 3, dtype=np.float64)
     else:
-        p = np.array([_detect_pitch(xyz[:, i]) for i in range(3)])
+        found = [_detect_pitch(xyz[:, i]) for i in range(3)]
+        # 1層しかない軸は他の軸のピッチを使う
+        known = [v for v in found if v is not None]
+        fallback = min(known) if known else 1.0
+        p = np.array([v if v is not None else fallback for v in found])
     origin = xyz.min(axis=0)
     ijk = np.rint((xyz - origin) / p).astype(np.int64)
     shape = tuple(int(s) for s in ijk.max(axis=0) + 1)
@@ -346,8 +348,12 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--min-voxels", type=int, default=1)
     a = ap.parse_args(argv)
 
-    with open(a.csv, encoding="utf-8-sig") as fh:
-        data, cols = read_csv_text(fh.read())
+    raw = open(a.csv, "rb").read()
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        text = raw.decode("cp932")  # Windows の Excel で保存した CSV
+    data, cols = read_csv_text(text)
     params = AnalysisParams(a.connectivity, a.radius, json.loads(a.offsets) if a.offsets else None,
                             a.min_dt, a.min_voxels)
     r = analyze(data, params, pitch=a.pitch, columns=cols)

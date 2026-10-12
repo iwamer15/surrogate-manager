@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "electron:compile": "tsc -p tsconfig.node.json",
-    "electron": "npm run electron:compile && concurrently \"npm run dev\" \"wait-on http://localhost:5173 && NODE_ENV=development electron .\"",
+    "electron": "npm run electron:compile && concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
     "build:win": "npm run build && electron-builder --win",
     "preview": "vite preview"
   },
@@ -44,5 +44,8 @@
     "mac": {
       "target": "dmg"
     }
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }
