@@ -1,0 +1,51 @@
+{
+  "name": "surrogate-manager",
+  "version": "0.1.0",
+  "description": "鋳造解析サロゲートモデルのデータ・タスク管理ツール",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "electron:compile": "tsc -p tsconfig.node.json",
+    "electron": "npm run electron:compile && concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
+    "build:win": "npm run build && electron-builder --win",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.186.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "concurrently": "^10.0.3",
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.4",
+    "wait-on": "^9.0.10"
+  },
+  "build": {
+    "appId": "com.surrogate-manager.app",
+    "productName": "Surrogate Manager",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

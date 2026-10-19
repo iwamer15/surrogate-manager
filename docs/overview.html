@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>サロゲート開発ツールの全体像</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+  /* 1920×1080 のスライドを、画面の幅に合わせて縮小表示する */
+  html, body { margin: 0; background: #2b3038; }
+  body { display: flex; justify-content: center; padding: 24px 16px; box-sizing: border-box; }
+  .frame { width: min(100%, 1920px); aspect-ratio: 16 / 9; position: relative; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.35); }
+  .stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  h1, h2, h3, p, ul { margin: 0; }
+  ul { padding-left: 1.2em; }
+</style>
+</head>
+<body>
+<div class="frame"><div class="stage">
+<section id="overview" style="width:1920px;height:1080px;box-sizing:border-box;position:relative;background:#F5F4F0;color:#1E2530;font-family:'Noto Sans JP', Arial, sans-serif;padding:112px 128px 140px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:26px;font-weight:700;letter-spacing:2px;color:#2A62C9">鋳造CAE サロゲートモデル開発の2つのツール</p>
+<h2 style="font-family:'Zen Kaku Gothic New', 'Noto Sans JP', Arial, sans-serif;font-size:60px;font-weight:700;line-height:1.2;color:#1E2530">Lab で作って確かめ、Manager で管理して読み解く</h2>
+</div>
+<div style="display:flex;gap:28px;align-items:stretch">
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FDFDFB;border:3px solid #2A62C9;border-radius:20px;padding:44px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;color:#2A62C9">作る・試す・理解する</p>
+<h3 style="font-family:'Zen Kaku Gothic New', 'Noto Sans JP', Arial, sans-serif;font-size:48px;font-weight:700;color:#1E2530">ML Process Lab</h3>
+<ul style="font-size:28px;line-height:1.5;color:#3A4350">
+<li>前処理〜評価を35手法で組み替え</li>
+<li>処理前後をグラフ・3Dで比較</li>
+<li>学習点抽出・全点評価・モデル保存</li>
+<li>新しい形状を予測してCSV出力</li>
+</ul>
+<p style="font-size:24px;color:#5F6875">使う人：手法を開発・検証する人</p>
+</div>
+<div style="width:300px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:22px">
+<p style="font-size:26px;font-weight:700;text-align:center;line-height:1.35;color:#1E2530">予測CSV<br>x, y, z, 予測値</p>
+<svg width="190" height="92" viewBox="0 0 190 92" aria-hidden="true"><polygon points="0,26 112,26 112,0 190,46 112,92 112,66 0,66" fill="#D9622B"/></svg>
+<div style="height:28px"></div>
+<svg width="190" height="92" viewBox="0 0 190 92" aria-hidden="true"><polygon points="190,26 78,26 78,0 0,46 78,92 78,66 190,66" fill="#C3C9D2"/></svg>
+<p style="font-size:24px;text-align:center;line-height:1.35;color:#5F6875">学習結果・精度の登録<br>（今後の連携）</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FDFDFB;border:3px solid #D9622B;border-radius:20px;padding:44px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;color:#B84E1C">管理する・結果を読み解く</p>
+<h3 style="font-family:'Zen Kaku Gothic New', 'Noto Sans JP', Arial, sans-serif;font-size:48px;font-weight:700;color:#1E2530">Surrogate Manager</h3>
+<ul style="font-size:28px;line-height:1.5;color:#3A4350">
+<li>データ・版・予測結果・TODOを管理</li>
+<li>閉ループ解析で引け巣リスクを検出</li>
+<li>危険度Δtの一覧と凝固進行の3D再生</li>
+<li>チームで共有（Windowsで起動）</li>
+</ul>
+<p style="font-size:24px;color:#5F6875">使う人：部署のチーム（非エンジニア含む）</p>
+</div>
+</div>
+<div style="display:flex;align-items:center;justify-content:center;gap:18px">
+<p style="font-size:24px;font-weight:700;color:#5F6875;letter-spacing:1px">流れ</p>
+<p style="font-size:26px;font-weight:500;background:#E9E7E0;color:#1E2530;padding:12px 28px;border-radius:999px">STL＋CAE結果</p>
+<p style="font-size:28px;color:#8A919B">→</p>
+<p style="font-size:26px;font-weight:500;background:#DCE6F8;color:#1C4A9E;padding:12px 28px;border-radius:999px">Lab で学習・評価・予測</p>
+<p style="font-size:28px;color:#8A919B">→</p>
+<p style="font-size:26px;font-weight:500;background:#F8E3D7;color:#9A3F14;padding:12px 28px;border-radius:999px">Manager で閉ループ解析</p>
+<p style="font-size:28px;color:#8A919B">→</p>
+<p style="font-size:26px;font-weight:700;background:#1E2530;color:#F5F4F0;padding:12px 28px;border-radius:999px">引け巣リスク部を特定・共有</p>
+</div>
+</section>
+</div></div>
+<script>
+  // 枠の幅に合わせてスライド全体を拡大縮小する
+  const frame = document.querySelector('.frame'), stage = document.querySelector('.stage');
+  const fit = () => { stage.style.transform = 'scale(' + frame.clientWidth / 1920 + ')'; };
+  new ResizeObserver(fit).observe(frame); fit();
+</script>
+</body>
+</html>

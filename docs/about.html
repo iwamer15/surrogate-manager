@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Surrogate Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* 構成: 1カラムの読み物（ML Process Lab のページと同じ骨組み・橙を主色に） */
+:root {
+  --bg: #f5f4f0;
+  --surface: #fdfdfb;
+  --ink: #1e2530;
+  --muted: #5d6673;
+  --line: #e2e0d8;
+  --accent: #b84e1c;        /* Manager */
+  --accent-soft: #f8e3d7;
+  --partner: #2a62c9;       /* Lab */
+  --partner-soft: #dce6f8;
+  --liquid: #2a78d6;        /* 図: つながっている液相 */
+  --isolated: #d8423f;      /* 図: 孤立した液相（閉ループ） */
+  --solid: #b9bfc8;         /* 図: 凝固済み */
+  --ok: #1d7a4a;
+  --warn: #9a5b00;
+  --f-display: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  --f-body: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', sans-serif;
+  --f-mono: 'JetBrains Mono', 'Consolas', 'Menlo', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181f; --surface: #1b212b; --ink: #e9ecf1; --muted: #a3acb9; --line: #2c3442;
+    --accent: #ee9a6c; --accent-soft: #3b261b; --partner: #7aa5f0; --partner-soft: #1f2f4d;
+    --liquid: #4b93e8; --isolated: #ec6a66; --solid: #59616d; --ok: #5fc48e; --warn: #e3ac55; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14181f; --surface: #1b212b; --ink: #e9ecf1; --muted: #a3acb9; --line: #2c3442;
+  --accent: #ee9a6c; --accent-soft: #3b261b; --partner: #7aa5f0; --partner-soft: #1f2f4d;
+  --liquid: #4b93e8; --isolated: #ec6a66; --solid: #59616d; --ok: #5fc48e; --warn: #e3ac55; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.8; padding-inline: 20px; padding-block: 0 80px; }
+.wrap { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.35; margin: 0; }
+p { margin: 0; }
+a { color: var(--accent); }
+code { font-family: var(--f-mono); font-size: 0.9em; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header.hero { padding-block: 56px 8px; display: flex; flex-direction: column; gap: 18px; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); }
+.hero h1 { font-size: clamp(34px, 6vw, 52px); }
+.hero .lead { font-size: 18px; color: var(--muted); max-width: 40em; }
+.facts { display: flex; flex-wrap: wrap; gap: 10px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 16px; font-size: 14px; }
+.fact b { font-family: var(--f-mono); color: var(--accent); margin-right: 4px; }
+
+section { display: flex; flex-direction: column; gap: 18px; }
+section > h2 { font-size: 26px; padding-left: 14px; border-left: 4px solid var(--accent); }
+section > p { max-width: 40em; }
+.note { font-size: 14px; color: var(--muted); }
+
+.flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: center; }
+.node { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.node h3 { font-size: 16px; }
+.node p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.node.lab { border: 2px solid var(--partner); }
+.node.mgr { border: 2px solid var(--accent); }
+.arrow { color: var(--muted); font-size: 20px; text-align: center; }
+@media (max-width: 640px) { .flow { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); } }
+
+.screens { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.screen { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 16px 18px; border-top: 1px solid var(--line); }
+.screen:first-child { border-top: none; }
+.screen h3 { font-size: 16px; }
+.screen p { font-size: 14px; color: var(--muted); line-height: 1.7; min-width: 0; }
+.screen.key { background: var(--accent-soft); }
+.screen.key h3 { color: var(--accent); }
+@media (max-width: 640px) { .screen { grid-template-columns: 1fr; gap: 4px; } }
+
+.panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .panels { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.panel svg { width: 100%; height: auto; display: block; }
+.panel .t { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.panel p { font-size: 13.5px; line-height: 1.65; }
+.liq { fill: var(--liquid); } .iso { fill: var(--isolated); } .sol { fill: var(--solid); }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 520px; }
+th, td { text-align: left; padding: 10px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+thead th { border-top: none; background: var(--accent-soft); font-weight: 700; }
+td:first-child { font-weight: 700; white-space: nowrap; }
+
+ol.steps { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; max-width: 40em; }
+
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.box h3 { font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.box ul { margin: 0; padding-left: 1.2em; font-size: 14px; line-height: 1.8; }
+.pill { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.pill.ok { color: var(--ok); border: 1px solid var(--ok); }
+.pill.todo { color: var(--warn); border: 1px solid var(--warn); }
+
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">鋳造CAE サロゲートモデル開発ツール ②</p>
+    <h1>Surrogate Manager</h1>
+    <p class="lead">鋳造解析のサロゲートモデルに関わるデータ・モデルの版・予測結果・タスクをチームで管理し、予測した凝固時間の分布から引け巣のリスクがある部位（閉ループ）を見つけるツールです。</p>
+    <div class="facts">
+      <span class="fact"><b>5</b>画面</span>
+      <span class="fact"><b>6/18/26</b>近傍で閉ループ解析</span>
+      <span class="fact"><b>100万</b>ボクセルを約7秒で解析</span>
+      <span class="fact">Windows で <b>start.bat</b> 起動</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>位置付け</h2>
+    <p>サロゲートモデルを<strong>管理する・結果を読み解く</strong>側のツールです。モデルづくりと検証は ML Process Lab で行い、Lab が出力した予測CSVをここで開いて、閉ループ解析とチームでの共有を行います。</p>
+    <div class="flow" role="img" aria-label="ML Process Lab の予測CSVを Surrogate Manager で閉ループ解析し、引け巣リスク部を特定・共有する流れ">
+      <div class="node lab"><h3>ML Process Lab</h3><p>学習・評価・新しい形状の予測</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="node mgr"><h3>Surrogate Manager</h3><p>予測CSVを読み込み、閉ループ解析・記録・管理</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="node"><h3>現場の判断</h3><p>引け巣リスク部の特定、押湯・冷やし金の検討</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>画面と機能</h2>
+    <div class="screens">
+      <div class="screen"><h3>データ管理</h3><p>STL＋CSVのサンプル（1サンプル＝1形状・1鋳造条件）の登録・一覧・検索・詳細。</p></div>
+      <div class="screen"><h3>バージョン管理</h3><p>モデルの版ごとに、アルゴリズム・ハイパーパラメータ・特徴量・目的変数と、学習／検証に使ったサンプルを記録。</p></div>
+      <div class="screen"><h3>予測結果管理</h3><p>予測値と解析値を記録して比較。MAE・RMSE・R² を自動で計算。</p></div>
+      <div class="screen key"><h3>フィールド可視化（閉ループ解析）</h3><p>凝固時間の点群から閉ループを検出して3D表示。探索範囲・判定条件を変えて試せ、危険度の一覧、凝固の進み方の再生、結果のCSV出力ができる。</p></div>
+      <div class="screen"><h3>TODO</h3><p>カンバン形式のチームタスク管理（優先度・期限・担当者）。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>閉ループ解析の考え方</h2>
+    <p>鋳物は表面に近い所から固まります。固まる途中で、まだ液体の部分が周囲を先に固まった金属に囲まれて孤立すると、押湯から溶湯を補給できず、そこが固まるときの縮みで引け巣ができやすくなります。この孤立した液相を<strong>閉ループ</strong>と呼び、凝固時間の分布から自動で見つけます。</p>
+    <div class="panels">
+      <div class="panel">
+        <span class="t">時刻 t₁（注湯直後）</span>
+        <svg viewBox="0 0 240 150" role="img" aria-label="板・ボス・押湯がすべて液体でつながっている断面">
+          <rect class="liq" x="10" y="108" width="220" height="32" rx="2"/>
+          <rect class="liq" x="40" y="58" width="52" height="52" rx="2"/>
+          <rect class="liq" x="160" y="16" width="52" height="94" rx="2"/>
+        </svg>
+        <p>全体が液体で、押湯とつながっている。</p>
+      </div>
+      <div class="panel">
+        <span class="t">時刻 t₂（孤立時刻）</span>
+        <svg viewBox="0 0 240 150" role="img" aria-label="薄い板が先に固まり、ボスの液体が押湯から切り離された断面">
+          <rect class="sol" x="10" y="108" width="220" height="32" rx="2"/>
+          <rect class="sol" x="40" y="58" width="52" height="52" rx="2"/>
+          <rect class="iso" x="50" y="68" width="32" height="40" rx="4"/>
+          <rect class="sol" x="160" y="16" width="52" height="94" rx="2"/>
+          <rect class="liq" x="170" y="22" width="32" height="76" rx="4"/>
+        </svg>
+        <p>薄い板が先に固まり、厚いボスの液体が押湯から切り離される（閉ループ）。</p>
+      </div>
+      <div class="panel">
+        <span class="t">時刻 t₃（ピーク）</span>
+        <svg viewBox="0 0 240 150" role="img" aria-label="ボスの中心が最後に固まり、引け巣のリスクがある断面">
+          <rect class="sol" x="10" y="108" width="220" height="32" rx="2"/>
+          <rect class="sol" x="40" y="58" width="52" height="52" rx="2"/>
+          <rect class="iso" x="59" y="78" width="14" height="16" rx="4"/>
+          <rect class="sol" x="160" y="16" width="52" height="94" rx="2"/>
+          <rect class="liq" x="176" y="26" width="20" height="44" rx="4"/>
+        </svg>
+        <p>ボスの中心が補給なしで最後に固まる。ここが引け巣のリスク部。</p>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background: var(--liquid)"></i>つながっている液相（押湯から補給できる）</span>
+      <span><i style="background: var(--isolated)"></i>孤立した液相（閉ループ）</span>
+      <span><i style="background: var(--solid)"></i>凝固済み</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>項目</th><th>意味</th></tr></thead>
+        <tbody>
+          <tr><td>孤立時刻</td><td>その液相が周囲から切り離される時刻（図の t₂）</td></tr>
+          <tr><td>ピーク</td><td>閉ループの中で最後に固まる点の凝固時間（図の t₃）</td></tr>
+          <tr><td>Δt（危険度）</td><td>ピーク − 孤立時刻。孤立したまま固まる時間で、長いほど補給されずに縮む量が大きい</td></tr>
+          <tr><td>最終凝固部</td><td>最後まで吸収されない液相（押湯など）。閉ループには数えない</td></tr>
+          <tr><td>探索範囲</td><td>「つながっている」とみなす隣の範囲。6近傍（面）・18近傍・26近傍 × 半径1〜4、または層ごとに任意に指定</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">凝固時間の遅い順にボクセルを足していき、液相のかたまりが合流する瞬間を記録する方法（Union-Find による max-tree）で、全時刻のつながり方を1回の走査で求めます。最小Δt と最小体積で小さなノイズを除きます。</p>
+  </section>
+
+  <section>
+    <h2>ML Process Lab の予測を開く</h2>
+    <ol class="steps">
+      <li>Lab の「モデル・予測」画面で、出力先に <code>surrogate-manager/data/results</code> を選んで予測する</li>
+      <li>Manager の「フィールド可視化」で、<code>data/</code> 配下の一覧からその予測CSVを選ぶ（ドラッグ＆ドロップでも可）</li>
+      <li>探索範囲と最小Δt を決めて解析し、閉ループの一覧からクリックで位置を確認する</li>
+    </ol>
+    <p class="note">CSVは x, y, z, 値 の列（2mm角などのボクセル）。ピッチは座標から自動判定し、Shift_JIS（Excel保存）にも対応しています。</p>
+  </section>
+
+  <section>
+    <h2>状況</h2>
+    <div class="pair">
+      <div class="box">
+        <h3>動いているもの <span class="pill ok">OK</span></h3>
+        <ul>
+          <li>データ・バージョン・予測結果・TODO の管理</li>
+          <li>閉ループ解析: デモ（板＋ボス2個＋押湯）でボス2か所を検出、100万ボクセル・6近傍で約7秒</li>
+          <li>Lab の予測CSV（実測なしの新形状）を読み込み、閉ループを検出</li>
+          <li>Windows 用の起動スクリプトと手順書</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>これから <span class="pill todo">未実装・未確認</span></h3>
+        <ul>
+          <li>ログイン・権限管理</li>
+          <li>精度の推移グラフ（進捗管理画面）</li>
+          <li>Lab の学習結果を版・予測結果として自動登録する連携</li>
+          <li>実データと Windows 実機での確認、閉ループの社内判定基準の反映</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>技術構成と起動</h2>
+    <p>画面は React ＋ TypeScript（three.js で3D）、サーバは FastAPI ＋ SQLite（チーム運用では PostgreSQL を想定）。Electron でデスクトップアプリにもできます。Windows は <code>start.bat</code> をダブルクリックで起動し、ブラウザで <code>http://localhost:5173</code> が開きます。</p>
+  </section>
+
+  <footer>関連ツール: ML Process Lab（前処理〜評価をプラグインで組み替えて可視化）</footer>
+</div>
+
+</body>
+</html>
